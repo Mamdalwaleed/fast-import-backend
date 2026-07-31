@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 
+const vehicleRoutes = require("./routes/vehicleRoutes");
+
 const app = express();
 
 // Autorise les requêtes du frontend
@@ -15,5 +17,8 @@ app.get("/", (req, res) => {
     message: "Bienvenue sur l'API Fast Import 🚗",
   });
 });
+
+// Routes véhicules
+app.use("/api/vehicles", vehicleRoutes);
 
 module.exports = app;
