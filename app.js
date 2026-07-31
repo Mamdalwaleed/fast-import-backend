@@ -5,13 +5,14 @@ const vehicleRoutes = require("./routes/vehicleRoutes");
 
 const app = express();
 
-// Autorise les requêtes du frontend
 app.use(cors());
 
-// Permet de recevoir du JSON
 app.use(express.json());
 
-// Route de test
+// Permet d'accéder aux images
+app.use("/uploads", express.static("uploads"));
+
+// Route test
 app.get("/", (req, res) => {
   res.json({
     message: "Bienvenue sur l'API Fast Import 🚗",
