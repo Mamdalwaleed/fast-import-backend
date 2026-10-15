@@ -27,7 +27,7 @@ const vehicleSchema = new mongoose.Schema(
     fuel: {
       type: String,
       required: true,
-      enum: ["Essence", "Diesel", "Hybride", "Électrique"],
+      enum: ["Essence", "Diesel", "Hybride", "Électrique", "hybride"],
     },
 
     gearbox: {
