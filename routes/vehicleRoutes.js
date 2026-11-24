@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
+
 const authAdmin = require("../middleware/authAdmin");
 const Vehicle = require("../models/Vehicle");
 const upload = require("../middleware/upload");
+const cloudinary = require("../config/cloudinary");
 
 // GET - Tous les véhicules
 router.get("/", async (req, res) => {
@@ -45,13 +47,41 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST - Ajouter un véhicule avec images (admin uniquement)
+// POST - Ajouter un véhicule avec images Cloudinary
 router.post("/", authAdmin, upload.array("images", 5), async (req, res) => {
   try {
-    const imagePaths = req.files
-      ? req.files.map((file) => `/uploads/${file.filename}`)
-      : [];
+    const imagePaths = [];
 
+    // Envoyer les images vers Cloudinary
+    for (const file of req.files || []) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "fast-import/vehicles",
+            resource_type: "image",
+            transformation: [
+              {
+                quality: "auto",
+                fetch_format: "auto",
+              },
+            ],
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        );
+
+        stream.end(file.buffer);
+      });
+
+      imagePaths.push(result.secure_url);
+    }
+
+    // Enregistrer le véhicule dans MongoDB
     const vehicle = new Vehicle({
       brand: req.body.brand,
       model: req.body.model,
@@ -70,6 +100,7 @@ router.post("/", authAdmin, upload.array("images", 5), async (req, res) => {
     res.status(201).json(savedVehicle);
   } catch (error) {
     console.error("ERREUR CRÉATION :", error);
+
     res.status(500).json({
       message: "Erreur création véhicule",
       error: error.message,
@@ -99,6 +130,7 @@ router.delete("/:id", authAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error("ERREUR SUPPRESSION :", error);
+
     res.status(500).json({
       message: "Erreur suppression véhicule",
       error: error.message,
